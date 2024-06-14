@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7414d7bb-4529-4fa9-9165-2538f899986f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="batch-pocFlow" doc:id="6073c7d8-da95-4db3-a5e8-07be08fe51e6" >
+		<http:listener doc:name="Listener" doc:id="34f12189-f2af-49d2-b696-607ca5d0325d" config-ref="HTTP_Listener_config" path="/batchpoc"/>
+		<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;[&#10;  {&#10;    "uniqueId": [&#10;      "123",&#10;      "456"&#10;    ],&#10;    "accountId": [&#10;      "1004",&#10;      "1008"&#10;    ]&#10;  }&#10;]]' doc:name="Set Payload" doc:id="a80f1e7d-04db-4f0b-8e8a-03ab22921592" />
+		<batch:job jobName="batch-pocBatch_Job" doc:id="0ce06f1c-f8b6-447d-9c0b-bd27b8c1bb36" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="32d2a611-f454-40fb-b61b-893cbfe0fd02" acceptPolicy="ALL">
+					<logger level="INFO" doc:name="Logger" doc:id="81dd3d18-99a2-4fc0-a7ad-b63c34d3c994" message="Payload : #[payload.uniqueId]"/>
+					<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  "tickets": [&#10;    {&#10;      "accountId": payload.uniqueId,&#10;      "supportTicket": {&#10;        "id": "4567",&#10;        "summary": "Test",&#10;        "description": "Test",&#10;        "status": "Process",&#10;        "substatus": "Test",&#10;        "priority": "",&#10;        "entereddate": "",&#10;        "closedDate": "",&#10;        "updatedDate": "",&#10;        "product.id": "",&#10;        "product.name": "test",&#10;        "site.id": "",&#10;        "site.name": "test site name",&#10;        "user.id": "",&#10;        "ownerName": "jav",&#10;        "activitycount": ""&#10;      }&#10;    }&#10;    &#10;    ]&#10;    &#10;    }]' doc:name="Set Variable" doc:id="912708c1-0716-4101-9e4e-47df6236bd85" variableName="ticket"/>
+					<logger level="INFO" doc:name="Logger" doc:id="03dda1b6-4c3e-457c-a651-0cc9c0b7d8a4" message="#[vars.ticket.tickets.supportTicket]"/>
+					<ee:transform doc:name="Transform Message" doc:id="0c1156a7-96b3-4d53-9c31-4a227156d045" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+vars.ticket.tickets.supportTicket]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<file:write doc:name="Write" doc:id="c37c3205-9b67-416d-87fc-8d96879cc5d9" path="C:\Users\javed\Desktop\ftp dir\file"/>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+</mule>
