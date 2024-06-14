@@ -32,11 +32,12 @@ payload filter ($.connect.accountId != null)  map (sample) -> {
 			<batch:process-records >
 				<batch:step name="Batch_Step" doc:id="32d2a611-f454-40fb-b61b-893cbfe0fd02">
 					<logger level="INFO" doc:name="Logger" doc:id="81dd3d18-99a2-4fc0-a7ad-b63c34d3c994" message="Payload : #[payload.uniqueId] #[payload.account.accountId]" />
-					<set-variable value="#[{} as Object]" doc:name="Set Variable" doc:id="53aec7d6-4527-47a8-8604-7307a8b81587" variableName="output" />
+					<set-variable value="#[[]]" doc:name="Set Variable" doc:id="9ab87d1c-0569-4b61-bd24-064a6d6af0f1" variableName="errorData"/>
+					<set-variable value="#[[]]" doc:name="Set Variable" doc:id="53aec7d6-4527-47a8-8604-7307a8b81587" variableName="output" />
 					<set-variable value="#[payload.uniqueId as String]" doc:name="uniqueId" doc:id="9cda8c77-2b04-4945-a75e-c17c0a559284" variableName="uniqueId"/>
-					<try doc:name="Try" doc:id="1e995cad-a665-48f8-a630-9f3d7af58f52" >
-						<foreach doc:name="For Each" doc:id="6996d429-2fbc-439c-b19e-85895c90116f" collection="#[flatten (payload.account)]">
+					<foreach doc:name="For Each" doc:id="6996d429-2fbc-439c-b19e-85895c90116f" collection="#[flatten (payload.account)]">
 						<logger level="INFO" doc:name="Logger" doc:id="473b6310-1361-4fcb-8c97-8480eb006272" message="#[payload.accountId]" />
+						<try doc:name="Try" doc:id="1e995cad-a665-48f8-a630-9f3d7af58f52">
 						<ee:transform doc:name="Transform Message" doc:id="a8a3808f-b077-4b13-95ce-948ec5d1321f">
 							<ee:message>
 								<ee:set-payload><![CDATA[%dw 2.0
@@ -48,6 +49,24 @@ else
 payload]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
+							<error-handler>
+							<!-- [STUDIO:"On Error Continue"]<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="967f3741-68fd-474c-beca-71cba0474ed0" type="ANY">
+							</on-error-continue> [STUDIO] -->
+							<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="4be789db-245e-4694-a6a3-3c5c160c2f11" type="ANY">
+									<set-payload value='#[{"accountId": payload.accountId,&#10;	uniqueId: vars.uniqueId&#10;}]' doc:name="Set Payload" doc:id="d09745be-be77-4e7e-bc38-009654f9c48b" />
+									<ee:transform doc:name="Transform Message" doc:id="e0e77050-8803-4972-b7b9-5b2f704b641d">
+									<ee:message>
+									</ee:message>
+										<ee:variables >
+											<ee:set-variable variableName="errorData" ><![CDATA[%dw 2.0
+output application/json
+---
+payload >> vars.errorData]]></ee:set-variable>
+										</ee:variables>
+								</ee:transform>
+							</on-error-propagate>
+						</error-handler>
+					</try>
 						<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;&#10;{&#10;    "accountId": "aa73e3b3-2156-48bd-9d20-59337105d1e7",&#10;    "techSupportId": "970045741",&#10;    "email": "nirmalkumar.as@se.com",&#10;    "firstName": "nirmalkumar",&#10;    "lastName": "as",&#10;    "middleName": "",&#10;    "name": "",&#10;    "createdDate": "2020-08-11T07:59:50.088Z",&#10;    "updatedDate": "2020-07-11T07:59:50.088Z"&#10;  }]' doc:name="Salesforce Target Variable" doc:id="912708c1-0716-4101-9e4e-47df6236bd85" variableName="salesforceResponse" />
 							<logger level="INFO" doc:name="Logger" doc:id="03dda1b6-4c3e-457c-a651-0cc9c0b7d8a4" message="#[vars.uniqueId]" />
 							<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;[&#10;  {&#10;    &quot;createdDate&quot;: &quot;2021-05-31T23:51:40.627&quot;,&#10;    &quot;updatedDate&quot;: &quot;2021-05-31T23:19:11&quot;,&#10;    &quot;id&quot;: &quot;360837&quot;,&#10;    &quot;title&quot;: &quot;Citect SCADA 2016 - What's New in Citect SCADA 2016&quot;,&#10;    &quot;status&quot;: &quot;Attended&quot;,&#10;    &quot;product&quot;: {&#10;      &quot;id&quot;: &quot;329847689&quot;,&#10;      &quot;name&quot;: &quot;Plant SCADA&quot;&#10;    },&#10;    &quot;user&quot;: {&#10;      &quot;id&quot;: &quot;76120&quot;,&#10;      &quot;techSupportId&quot;: &quot;7588757&quot;,&#10;      &quot;fullName&quot;: &quot;AS&quot;,&#10;      &quot;mail&quot;: &quot;nirmalkumar&quot;,&#10;      &quot;address&quot;: {&#10;        &quot;city&quot;: &quot;Chennai&quot;,&#10;        &quot;country&quot;: &quot;India&quot;&#10;      }&#10;    }&#10;  },&#10;  {&#10;    &quot;createdDate&quot;: &quot;2021-05-31T23:51:40.627&quot;,&#10;    &quot;updatedDate&quot;: &quot;2021-05-31T23:19:11&quot;,&#10;    &quot;id&quot;: &quot;360837&quot;,&#10;    &quot;title&quot;: &quot;Citect SCADA 2016 - What's New in Citect SCADA 2016&quot;,&#10;    &quot;status&quot;: &quot;Attended&quot;,&#10;    &quot;product&quot;: {&#10;      &quot;id&quot;: &quot;329847689&quot;,&#10;      &quot;name&quot;: &quot;Plant SCADA&quot;&#10;    },&#10;    &quot;user&quot;: {&#10;      &quot;id&quot;: &quot;76121&quot;,&#10;      &quot;techSupportId&quot;: &quot;970045741&quot;,&#10;      &quot;fullName&quot;: &quot; AS&quot;,&#10;      &quot;mail&quot;: &quot;nirmalkumar&quot;,&#10;      &quot;address&quot;: {&#10;        &quot;city&quot;: &quot;Chennai&quot;,&#10;        &quot;country&quot;: &quot;India&quot;&#10;      }&#10;    }&#10;  },&#10;  {&#10;    &quot;createdDate&quot;: &quot;2021-05-31T23:51:40.627&quot;,&#10;    &quot;updatedDate&quot;: &quot;2021-05-31T23:19:11&quot;,&#10;    &quot;id&quot;: &quot;360837&quot;,&#10;    &quot;title&quot;: &quot;Citect SCADA 2016 - What's New in Citect SCADA 2016&quot;,&#10;    &quot;status&quot;: &quot;Attended&quot;,&#10;    &quot;product&quot;: {&#10;      &quot;id&quot;: &quot;329847689&quot;,&#10;      &quot;name&quot;: &quot;Plant SCADA&quot;&#10;    },&#10;    &quot;user&quot;: {&#10;      &quot;id&quot;: &quot;76122&quot;,&#10;      &quot;techSupportId&quot;: &quot;970045743&quot;,&#10;      &quot;fullName&quot;: &quot; AS&quot;,&#10;      &quot;mail&quot;: &quot;nirmalkumar&quot;,&#10;      &quot;address&quot;: {&#10;        &quot;city&quot;: &quot;Chennai&quot;,&#10;        &quot;country&quot;: &quot;India&quot;&#10;      }&#10;    }&#10;  },&#10;  {&#10;    &quot;createdDate&quot;: &quot;2021-05-31T23:51:40.627&quot;,&#10;    &quot;updatedDate&quot;: &quot;2021-05-31T23:19:11&quot;,&#10;    &quot;id&quot;: &quot;360837&quot;,&#10;    &quot;title&quot;: &quot;Citect SCADA 2016 - What's New in Citect SCADA 2016&quot;,&#10;    &quot;status&quot;: &quot;Attended&quot;,&#10;    &quot;product&quot;: {&#10;      &quot;id&quot;: &quot;329847689&quot;,&#10;      &quot;name&quot;: &quot;Plant SCADA&quot;&#10;    },&#10;    &quot;user&quot;: {&#10;      &quot;id&quot;: &quot;76123&quot;,&#10;      &quot;techSupportId&quot;: &quot;970045744&quot;,&#10;      &quot;fullName&quot;: &quot;AS&quot;,&#10;      &quot;mail&quot;: &quot;nirmalkumar&quot;,&#10;      &quot;address&quot;: {&#10;        &quot;city&quot;: &quot;Chennai&quot;,&#10;        &quot;country&quot;: &quot;India&quot;&#10;      }&#10;    }&#10;  },&#10;  {&#10;    &quot;createdDate&quot;: &quot;2021-05-31T23:51:40.627&quot;,&#10;    &quot;updatedDate&quot;: &quot;2021-05-31T23:19:11&quot;,&#10;    &quot;id&quot;: &quot;360837&quot;,&#10;    &quot;title&quot;: &quot;Citect SCADA 2016 - What's New in Citect SCADA 2016&quot;,&#10;    &quot;status&quot;: &quot;Attended&quot;,&#10;    &quot;product&quot;: {&#10;      &quot;id&quot;: &quot;329847689&quot;,&#10;      &quot;name&quot;: &quot;Plant SCADA&quot;&#10;    },&#10;    &quot;user&quot;: {&#10;      &quot;id&quot;: &quot;76124&quot;,&#10;      &quot;techSupportId&quot;: &quot;970045745&quot;,&#10;      &quot;fullName&quot;: &quot;AS&quot;,&#10;      &quot;mail&quot;: &quot;nirmalkumar&quot;,&#10;      &quot;address&quot;: {&#10;        &quot;city&quot;: &quot;Chennai&quot;,&#10;        &quot;country&quot;: &quot;India&quot;&#10;      }&#10;    }&#10;  }&#10;]]" doc:name="Training Response" doc:id="e35e471a-5faf-49a2-9816-f10aebd19e8c" variableName="trainingResponse" />
@@ -88,29 +107,27 @@ output application/json
 output application/java
 ---
 if (vars."output" == null) payload
-else payload ++ vars."output" ]]></ee:set-variable>
+else payload >> vars."output" ]]></ee:set-variable>
 							</ee:variables>
 						</ee:transform>
 						</foreach>
-						<error-handler >
-							<!-- [STUDIO:"On Error Continue"]<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="967f3741-68fd-474c-beca-71cba0474ed0" type="ANY">
-							</on-error-continue> [STUDIO] -->
-							<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="4be789db-245e-4694-a6a3-3c5c160c2f11" type="ANY">
-								<set-payload value="#[payload]" doc:name="Set Payload" doc:id="d09745be-be77-4e7e-bc38-009654f9c48b" />
-							</on-error-propagate>
-						</error-handler>
-					</try>
-					<set-payload value='#[vars."output"]' doc:name="Set Payload" doc:id="dc2fe69e-85f4-47c9-99fe-6cf799b9b03b" />
-					<batch:aggregator doc:name="Batch Aggregator" doc:id="1f21df8e-dfdc-4224-a5d4-00e5dc328bd4" streaming="true">
+					<!-- [STUDIO:"Set Payload"]<set-payload value='#[vars."output"&#93;' doc:name="Set Payload" doc:id="dc2fe69e-85f4-47c9-99fe-6cf799b9b03b" /> [STUDIO] -->
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="1f21df8e-dfdc-4224-a5d4-00e5dc328bd4" size="2">
+						<logger level="INFO" doc:name="Logger" doc:id="658d8a31-b7c6-44a5-9985-1c080f477c66" message='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.records.variables."output"]' />
 						<ee:transform doc:name="Transform Message" doc:id="d843ed09-4233-42c8-b7a1-9fc1048346f2" >
 							<ee:message >
 								<ee:set-payload ><![CDATA[%dw 2.0
-output application/csv
+output application/json
 ---
-payload]]></ee:set-payload>
+vars.records.variables."output"]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
-						<file:write doc:name="Write" doc:id="c37c3205-9b67-416d-87fc-8d96879cc5d9" path="/Users/mohammedjp/Downloads/employee.csv" />
+						<file:write doc:name="Write" doc:id="c37c3205-9b67-416d-87fc-8d96879cc5d9" path="/Users/mohammedjp/Downloads/employee.csv" >
+							<file:content ><![CDATA[#[%dw 2.0
+output application/csv
+---
+flatten(payload)]]]></file:content>
+						</file:write>
 					</batch:aggregator>
 				</batch:step>
 				<batch:step name="Failureprocessing" doc:id="f83708c1-4644-4284-bbd3-84b329ea1709" acceptPolicy="ONLY_FAILURES">
@@ -124,9 +141,9 @@ output application/json
 payload]]></ee:set-variable>
 						</ee:variables>
 					</ee:transform>
-					<logger level="INFO" doc:name="Logger" doc:id="1da7d486-d4d3-49bc-bf0b-cb44a3af96bd" message="#[%dw 2.0&#10;output application/json&#10;---&#10;vars.errorRec]"/>
-					<batch:aggregator doc:name="Batch Aggregator" doc:id="6c8cb50c-eccb-47db-8019-50ee1270c754" streaming="true">
-						<logger level="INFO" doc:name="Logger" doc:id="3cebfd9b-7aaa-40bf-adab-a213fda32a34" message="#[%dw 2.0&#10;output application/json&#10;---&#10;vars.records.variables.errorRec]"/>
+					<logger level="INFO" doc:name="Logger" doc:id="1da7d486-d4d3-49bc-bf0b-cb44a3af96bd" message='#[%dw 2.0&#10;output application/json&#10;---&#10;["error data"] ++ [payload]]'/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="6c8cb50c-eccb-47db-8019-50ee1270c754" size="5">
+						<logger level="INFO" doc:name="Logger" doc:id="3cebfd9b-7aaa-40bf-adab-a213fda32a34" message='#[%dw 2.0&#10;output application/json&#10;---&#10;["failure records"] ++ [vars.records.variables.errorRec]]'/>
 					</batch:aggregator>
 				</batch:step>
 			</batch:process-records>
